@@ -43,10 +43,10 @@ impl RocketChat {
         if let Ok(body) = res {
             // println!("url = {:?} ; Post.body = {:?}", url, body);
             let json: serde_json::Value = serde_json::from_str(&body).unwrap();
-            return Result::Ok(json);
+            Result::Ok(json)
         } else {
             println!("Post failed: {:?}", res);
-            return Result::Err("Post failed".to_string());
+            Result::Err("Post failed".to_string())
         }
     }
 
@@ -67,9 +67,9 @@ impl RocketChat {
         if let Ok(body) = res {
             // println!("Get.body = {:?}", body);
             let json: serde_json::Value = serde_json::from_str(&body).unwrap();
-            return Result::Ok(json);
+            Result::Ok(json)
         } else {
-            return Result::Err(());
+            Result::Err(())
         }
     }
 
