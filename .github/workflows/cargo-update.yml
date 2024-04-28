@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: MIT
+
+# Runs "cargo update", which updates the lock file and creates PR
+# You need to manually close/open the PR to trigger the other workflows
+
+name: cargo update
+
+on:
+  schedule:
+  - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Setup git author name
+        uses: fregante/setup-git-user@v2
+
+      - name: cargo update
+        run: |
+          cargo update
+
+      - name: Create PR
+        run: |
+          sh cargo_update.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
