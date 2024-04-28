@@ -1,6 +1,5 @@
 [workspace]
-members = [
-    "rocketchat",
-    "rocketchat-cli",
-    "rocketchat-slint"
-]
+
+resolver = "2"
+
+members = ["rocketchat", "rocketchat-cli", "rocketchat-slint"]
