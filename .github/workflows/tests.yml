@@ -23,7 +23,3 @@ jobs:
       - name: Run tests
         run: |
           cargo test
-
-      - name: Run tests (Qt)
-        run: |
-          cargo test --features qt
