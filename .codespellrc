@@ -1,0 +1,4 @@
+[codespell]
+
+interactive = 3
+ignore-words-list = serde, ser
