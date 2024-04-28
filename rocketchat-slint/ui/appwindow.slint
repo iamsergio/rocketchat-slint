@@ -1,0 +1,23 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Sergio Martins
+
+import { Button, VerticalBox } from "std-widgets.slint";
+import { LoginWindow } from "login.slint";
+import { ChannelList } from "channel_list.slint";
+
+export component AppWindow inherits Window {
+    callback request-login <=> login.request-login;
+    in property<bool> logged-in: false;
+    in property channelModel <=> channelList.channelModel;
+
+    VerticalBox {
+        login := LoginWindow {
+            visible: !logged-in;
+        }
+    }
+
+    channelList := ChannelList {
+        x: 0px;
+        height: 100%;
+    }
+}

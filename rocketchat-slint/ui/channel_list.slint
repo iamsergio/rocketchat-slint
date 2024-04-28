@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Sergio Martins
+
+import { ListView , ScrollView, VerticalBox} from "std-widgets.slint";
+
+struct Channel {
+    id: string,
+    name: string,
+}
+
+export component ChannelList inherits Rectangle {
+    width: 30%;
+    background: #262931;
+    in property <[Channel]> channelModel;
+    VerticalBox {
+        padding-left: 0px;
+        for c in channelModel: Rectangle {
+            background: touchArea.pressed ? #31363f : (touchArea.has-hover ? #1b1d22 : transparent);
+            height: 35px;
+            Text {
+                x: 20px;
+                font-size: 15px;
+                text: "# " + c.name;
+                color: #74787f;
+                horizontal-alignment: left;
+            }
+            touchArea := TouchArea {
+
+            }
+        }
+    }
+}

@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "rocketchat",
+    "rocketchat-cli",
+    "rocketchat-slint"
+]

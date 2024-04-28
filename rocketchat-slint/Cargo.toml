@@ -1,0 +1,12 @@
+[package]
+name = "rocketchat-slint"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+slint = "1.3"
+tokio = { version = "1", features = ["full"] }
+rocketchat = { path = "../rocketchat" }
+
+[build-dependencies]
+slint-build = "1.3"
