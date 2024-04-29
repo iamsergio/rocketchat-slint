@@ -36,7 +36,7 @@ impl RocketChat {
             .json(&data)
             .send()
             .await
-            .unwrap()
+            .map_err(|e| e.to_string())?
             .text()
             .await;
 
@@ -109,8 +109,9 @@ impl RocketChat {
         map.insert("user", user);
         map.insert("password", pwd);
 
+        // println!("map = {:?}", map);
         let json = self.post("api/v1/login", map).await?;
-        // println!("body = {:?}", res);
+        // println!("body = {:?}", json);
 
         let success = json["status"].as_str().ok_or("status is missing")? == "success";
         if !success {
