@@ -7,7 +7,7 @@ import { ChannelList } from "channel_list.slint";
 
 export component AppWindow inherits Window {
     callback request-login <=> login.request-login;
-    in property<bool> logged-in: false;
+    in property <bool> logged-in: false;
     in property channelModel <=> channelList.channelModel;
 
     VerticalBox {
@@ -19,5 +19,6 @@ export component AppWindow inherits Window {
     channelList := ChannelList {
         x: 0px;
         height: 100%;
+        visible: logged-in;
     }
 }
