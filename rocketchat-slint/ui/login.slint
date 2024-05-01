@@ -9,6 +9,14 @@ export component LoginWindow inherits Rectangle {
 
     background: #2f343d;
 
+    Image {
+        source: @image-url("assets/icon.png");
+        width: 200px;
+        height: 200px;
+        y: 50px;
+        horizontal-alignment: ImageHorizontalAlignment.center;
+    }
+
     Rectangle {
         border-radius: 5px;
         width: 300px;
@@ -26,9 +34,7 @@ export component LoginWindow inherits Rectangle {
                     text: "Username";
                 }
 
-                username := LineEdit {
-
-                }
+                username := LineEdit { }
             }
 
             VerticalBox {
