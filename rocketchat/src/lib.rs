@@ -6,47 +6,61 @@ use std::{collections::HashMap, sync::Mutex};
 /// Represents the server
 pub struct RocketChat {
     url: String,
-    auth_token: Mutex<String>,
-    user_id: Mutex<String>,
+    exclusive_data: Mutex<ExclusiveData>,
+}
+
+/// Data that might be accessed by another thread
+#[derive(Default)]
+struct ExclusiveData {
+    auth_token: String,
+    user_id: String,
+}
+
+impl ExclusiveData {
+    fn new(auth_token: String, user_id: String) -> Self {
+        Self {
+            auth_token,
+            user_id,
+        }
+    }
 }
 
 impl RocketChat {
     pub fn new(url: &str, auth_token: &str) -> Self {
         Self {
             url: url.to_string(),
-            auth_token: Mutex::new(auth_token.to_string()),
-            user_id: Mutex::new(String::new()),
+            exclusive_data: Mutex::new(ExclusiveData::new(auth_token.to_string(), String::new())),
         }
     }
 
     pub fn is_logged_in(&self) -> bool {
-        let user_id = self.user_id.lock().unwrap();
-        !(*user_id).is_empty()
+        let data = self.exclusive_data.lock().unwrap();
+        data.user_id.is_empty()
     }
 
     pub fn get_user_id(&self) -> String {
-        let user_id = self.user_id.lock().unwrap();
-        user_id.clone()
+        let data = self.exclusive_data.lock().unwrap();
+        data.user_id.clone()
     }
 
     pub fn get_auth_token(&self) -> String {
-        let auth_token = self.auth_token.lock().unwrap();
-        auth_token.clone()
+        let data = self.exclusive_data.lock().unwrap();
+        data.auth_token.clone()
     }
 
     pub fn set_auth_token(&self, token: String) {
-        let mut auth_token = self.auth_token.lock().unwrap();
-        *auth_token = token;
+        let mut data = self.exclusive_data.lock().unwrap();
+        data.auth_token = token;
     }
 
     pub fn set_user_id(&self, id: String) {
-        let mut user_id = self.user_id.lock().unwrap();
-        *user_id = id;
+        let mut data = self.exclusive_data.lock().unwrap();
+        data.user_id = id;
     }
 
     fn clear_user_id(&self) {
-        let mut user_id = self.user_id.lock().unwrap();
-        (*user_id).clear();
+        let mut data = self.exclusive_data.lock().unwrap();
+        data.user_id.clear();
     }
 
     /// Sends a POST request
@@ -157,7 +171,7 @@ impl RocketChat {
                     .as_str()
                     .ok_or("data or authToken is missing")?,
             ));
-            println!("login success. authToken: {:?}", self.auth_token);
+            println!("login success. authToken: {:?}", self.get_auth_token());
             Ok(())
         } else {
             println!("login failed: {:?}", json);
