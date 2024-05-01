@@ -1,26 +1,52 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: Sergio Martins
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Mutex};
 
 /// Represents the server
 pub struct RocketChat {
     url: String,
-    user_id: String,
-    auth_token: String,
+    auth_token: Mutex<String>,
+    user_id: Mutex<String>,
 }
 
 impl RocketChat {
     pub fn new(url: &str, auth_token: &str) -> Self {
         Self {
             url: url.to_string(),
-            user_id: String::new(),
-            auth_token: auth_token.to_string(),
+            auth_token: Mutex::new(auth_token.to_string()),
+            user_id: Mutex::new(String::new()),
         }
     }
 
     pub fn is_logged_in(&self) -> bool {
-        !self.user_id.is_empty()
+        let user_id = self.user_id.lock().unwrap();
+        !(*user_id).is_empty()
+    }
+
+    pub fn get_user_id(&self) -> String {
+        let user_id = self.user_id.lock().unwrap();
+        user_id.clone()
+    }
+
+    pub fn get_auth_token(&self) -> String {
+        let auth_token = self.auth_token.lock().unwrap();
+        auth_token.clone()
+    }
+
+    pub fn set_auth_token(&self, token: String) {
+        let mut auth_token = self.auth_token.lock().unwrap();
+        *auth_token = token;
+    }
+
+    pub fn set_user_id(&self, id: String) {
+        let mut user_id = self.user_id.lock().unwrap();
+        *user_id = id;
+    }
+
+    fn clear_user_id(&self) {
+        let mut user_id = self.user_id.lock().unwrap();
+        (*user_id).clear();
     }
 
     /// Sends a POST request
@@ -56,8 +82,8 @@ impl RocketChat {
         let client = reqwest::Client::new();
         let res = client
             .get(&format!("{}/{}", self.url, endpoint))
-            .header("X-Auth-Token", self.auth_token.as_str())
-            .header("X-User-Id", self.user_id.as_str())
+            .header("X-Auth-Token", self.get_auth_token())
+            .header("X-User-Id", self.get_user_id().as_str())
             .send()
             .await
             .unwrap()
@@ -74,31 +100,32 @@ impl RocketChat {
     }
 
     /// Logs in via a pre-existing token
-    pub async fn login_via_token(&mut self) -> Result<bool, String> {
-        self.user_id.clear();
-        if self.auth_token.is_empty() {
+    pub async fn login_via_token(&self) -> Result<bool, String> {
+        self.clear_user_id();
+        if self.get_auth_token().is_empty() {
             // No error. But we can't login without a token.
             return Ok(false);
         }
 
         let mut map = HashMap::new();
-        map.insert("resume", self.auth_token.as_str());
+        let auth_token = self.get_auth_token();
+        map.insert("resume", auth_token.as_str());
         let json = self.post("api/v1/login", map).await?;
 
         println!("login_via_token: {:?}", json);
         let success = json["status"].as_str().ok_or("status is missing")? == "success";
         if success {
-            self.user_id = String::from(
+            self.set_user_id(String::from(
                 json["data"]["userId"]
                     .as_str()
                     .ok_or("data or userId is missing")?,
-            );
+            ));
         }
 
         Ok(success)
     }
 
-    pub async fn login(&mut self, user: &str, pwd: &str) -> Result<(), String> {
+    pub async fn login(&self, user: &str, pwd: &str) -> Result<(), String> {
         let mut map = HashMap::new();
 
         self.login_via_token().await?;
@@ -118,18 +145,18 @@ impl RocketChat {
             return Err(String::from("login failed, success=false"));
         }
 
-        self.user_id = String::from(
+        self.set_user_id(String::from(
             json["data"]["userId"]
                 .as_str()
                 .ok_or("data or userId is missing")?,
-        );
+        ));
 
         if self.is_logged_in() {
-            self.auth_token = String::from(
+            self.set_auth_token(String::from(
                 json["data"]["authToken"]
                     .as_str()
                     .ok_or("data or authToken is missing")?,
-            );
+            ));
             println!("login success. authToken: {:?}", self.auth_token);
             Ok(())
         } else {
@@ -149,7 +176,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_login() {
-        let mut rc = RocketChat::new(std::format!("https://{}", RC_SLINT_TEST_URL).as_str(), "");
+        let rc = RocketChat::new(std::format!("https://{}", RC_SLINT_TEST_URL).as_str(), "");
         rc.login(RC_SLINT_TEST_USER, RC_SLINT_TEST_PWD)
             .await
             .expect("failed");
