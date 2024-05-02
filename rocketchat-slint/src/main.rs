@@ -11,6 +11,8 @@ slint::include_modules!();
 async fn main() -> Result<(), slint::PlatformError> {
     let ui = AppWindow::new()?;
     let ui_weak = ui.as_weak();
+    ui.set_usernameText(SharedString::from(env!("RC_SLINT_TEST_USER")));
+    ui.set_passwordText(SharedString::from(env!("RC_SLINT_TEST_PWD")));
 
     pub const RC_SLINT_TEST_URL: &str = env!("RC_SLINT_TEST_URL");
 

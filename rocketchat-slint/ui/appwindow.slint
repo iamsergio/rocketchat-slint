@@ -9,6 +9,8 @@ export component AppWindow inherits Window {
     callback request-login <=> login.request-login;
     in property <bool> logged-in: false;
     in property channelModel <=> channelList.channelModel;
+    in property usernameText <=> login.usernameText;
+    in property passwordText <=> login.passwordText;
 
     VerticalBox {
         login := LoginWindow {

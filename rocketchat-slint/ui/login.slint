@@ -3,6 +3,9 @@
 
 import { VerticalBox, Button , LineEdit} from "std-widgets.slint";
 export component LoginWindow inherits Rectangle {
+    in property usernameText <=> username.text;
+    in property passwordText <=> pwd.text;
+
     width: 800px;
     height: 800px;
     callback request-login(string, string);
