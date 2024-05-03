@@ -151,7 +151,7 @@ impl RocketChat {
     }
 
     /// Logs in via a pre-existing token
-    pub async fn login_via_token(&self) -> Result<bool, String> {
+    pub async fn login_via_saved_token(&self) -> Result<bool, String> {
         self.clear_user_id();
         // println!("login_via_token: auth_token = {:?}", self.get_auth_token());
         if self.get_auth_token().is_empty() {
@@ -180,7 +180,7 @@ impl RocketChat {
     pub async fn login(&self, user: &str, pwd: &str) -> Result<(), String> {
         let mut map = HashMap::new();
 
-        self.login_via_token().await?;
+        self.login_via_saved_token().await?;
         if self.is_logged_in() {
             return Ok(());
         }
