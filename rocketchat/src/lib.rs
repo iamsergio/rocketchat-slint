@@ -185,7 +185,7 @@ impl RocketChat {
             return Ok(());
         }
 
-        Self::save_auth_token(&self, "").unwrap();
+        self.save_auth_token("").unwrap();
 
         map.insert("user", user);
         map.insert("password", pwd);
@@ -212,7 +212,8 @@ impl RocketChat {
                     .ok_or("data or authToken is missing")?,
             ));
             println!("login success. authToken: {:?}", self.get_auth_token());
-            Self::save_auth_token(&self, self.get_auth_token().as_str()).unwrap();
+            self.save_auth_token(self.get_auth_token().as_str())
+                .unwrap();
             Ok(())
         } else {
             println!("login failed: {:?}", json);
