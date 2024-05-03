@@ -16,6 +16,7 @@ impl Controller {
         ui.set_passwordText(SharedString::from(env!("RC_SLINT_TEST_PWD")));
 
         let controller = Rc::new(Self { ui, model });
+
         let controller_copy = controller.clone();
         controller
             .ui
@@ -33,7 +34,7 @@ impl Controller {
         let ui = self.ui.clone_strong();
         slint::spawn_local(async move {
             let result = model.login(&username, &password).await;
-            ui.set_logged_in(result.is_ok());
+            Self::set_logged_in(ui, model, result.is_ok()).await;
             if let Err(e) = result {
                 println!("slint: login failed: {}", e);
             }
@@ -43,6 +44,18 @@ impl Controller {
 
     pub async fn login_via_saved_token(&self) {
         let result = self.model.login_via_saved_token().await;
-        self.ui.set_logged_in(result.is_ok() && result.unwrap());
+        Controller::set_logged_in(
+            self.ui.clone_strong(),
+            self.model.clone(),
+            result.is_ok() && result.unwrap(),
+        )
+        .await;
+    }
+
+    async fn set_logged_in(ui: AppWindow, model: Rc<rocketchat::RocketChat>, logged_in: bool) {
+        ui.set_logged_in(logged_in);
+        if logged_in {
+            model.list_joined_channels().await;
+        }
     }
 }

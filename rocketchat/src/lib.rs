@@ -3,6 +3,8 @@
 
 use std::{collections::HashMap, sync::Mutex};
 
+use chrono::TimeZone;
+
 /// Represents the server
 pub struct RocketChat {
     url: String,
@@ -14,6 +16,14 @@ pub struct RocketChat {
 struct ExclusiveData {
     auth_token: String,
     user_id: String,
+    joined_channels: Vec<Channel>,
+}
+
+pub struct Channel {
+    pub id: String,
+    pub name: String,
+    pub num_msgs: u64,
+    pub last_message_timestamp: Option<i64>,
 }
 
 impl ExclusiveData {
@@ -21,6 +31,7 @@ impl ExclusiveData {
         Self {
             auth_token,
             user_id,
+            joined_channels: Vec::new(),
         }
     }
 }
@@ -61,6 +72,11 @@ impl RocketChat {
     fn clear_user_id(&self) {
         let mut data = self.exclusive_data.lock().unwrap();
         data.user_id.clear();
+    }
+
+    pub fn set_joined_channels(&self, channels: Vec<Channel>) {
+        let mut data = self.exclusive_data.lock().unwrap();
+        data.joined_channels = channels;
     }
 
     // TODO: Improve error handling
@@ -220,6 +236,55 @@ impl RocketChat {
             Err(String::from("login failed"))
         }
     }
+
+    pub async fn list_joined_channels(&self) {
+        if !self.is_logged_in() {
+            panic!("not logged in");
+        }
+        let res = self.get("/api/v1/channels.list.joined").await;
+        match res {
+            Ok(body) => {
+                serde_json::to_writer_pretty(std::io::stdout(), &body).unwrap();
+                let channels = body["channels"].as_array().unwrap();
+                let mut joined_channels = Vec::new();
+                for c in channels {
+                    let channel = Channel {
+                        id: String::from(c["_id"].as_str().unwrap()),
+                        name: String::from(c["name"].as_str().unwrap()),
+                        num_msgs: c["msgs"].as_u64().unwrap(),
+                        last_message_timestamp: Some(str_to_timestamp(c["lm"].as_str())),
+                    };
+
+                    joined_channels.push(channel);
+                }
+                self.set_joined_channels(joined_channels);
+            }
+            Err(_) => todo!(),
+        }
+    }
+}
+
+// example input: 2022-05-17T14:55:23.276Z
+fn str_to_timestamp(s: Option<&str>) -> i64 {
+    if s.is_none() {
+        return -1;
+    }
+    let s = s.unwrap();
+    let mut parts = s.split('T');
+    let date = parts.next().unwrap();
+    let time = parts.next().unwrap();
+    let mut parts = time.split('.');
+    let time = parts.next().unwrap();
+    let mut parts = time.split(':');
+    let hour = parts.next().unwrap().parse::<i64>().unwrap();
+    let min = parts.next().unwrap().parse::<i64>().unwrap();
+    let sec = parts.next().unwrap().parse::<i64>().unwrap();
+    let mut parts = date.split('-');
+    let year = parts.next().unwrap().parse::<i32>().unwrap();
+    let month = parts.next().unwrap().parse::<u32>().unwrap();
+    let day = parts.next().unwrap().parse::<u32>().unwrap();
+    let dt = chrono::Utc.with_ymd_and_hms(year, month, day, hour as u32, min as u32, sec as u32);
+    dt.unwrap().timestamp()
 }
 
 #[cfg(test)]
