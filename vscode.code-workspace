@@ -1,0 +1,51 @@
+{
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Run workspace gen",
+        "type": "shell",
+        "command": "vscode-workspace-gen",
+        "args": [
+          "vscode.code-workspace.template"
+        ],
+        "problemMatcher": []
+      }
+    ]
+  },
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "files.associations": {
+      "*.code-workspace.template": "json"
+    },
+    "rust-analyzer.showUnlinkedFileNotification": false
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "rocketchat-slint",
+        "cargo": {
+          "args": [
+            "build",
+            "--bin=rocketchat-slint",
+            "--package=rocketchat-slint"
+          ],
+          "filter": {
+            "name": "rocketchat-slint",
+            "kind": "bin"
+          }
+        },
+        "args": [],
+        "cwd": "${workspaceFolder}"
+      }
+    ]
+  }
+}
