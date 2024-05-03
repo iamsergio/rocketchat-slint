@@ -22,8 +22,8 @@ async fn main() -> Result<(), slint::PlatformError> {
     ));
 
     let result = rc.login_via_token().await;
-    if let Ok(sucess) = result {
-        ui.set_logged_in(sucess);
+    if let Ok(success) = result {
+        ui.set_logged_in(success);
     }
 
     ui.on_request_login(move |username: SharedString, password: SharedString| {
