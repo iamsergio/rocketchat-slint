@@ -18,8 +18,13 @@ async fn main() -> Result<(), slint::PlatformError> {
 
     let rc = Rc::new(rocketchat::RocketChat::new(
         std::format!("https://{}", RC_SLINT_TEST_URL).as_str(),
-        "",
+        rocketchat::RocketChat::saved_auth_token().as_str(),
     ));
+
+    let result = rc.login_via_token().await;
+    if let Ok(sucess) = result {
+        ui.set_logged_in(sucess);
+    }
 
     ui.on_request_login(move |username: SharedString, password: SharedString| {
         println!("login requested");

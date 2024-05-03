@@ -35,7 +35,7 @@ impl RocketChat {
 
     pub fn is_logged_in(&self) -> bool {
         let data = self.exclusive_data.lock().unwrap();
-        data.user_id.is_empty()
+        !data.user_id.is_empty()
     }
 
     pub fn get_user_id(&self) -> String {
@@ -61,6 +61,43 @@ impl RocketChat {
     fn clear_user_id(&self) {
         let mut data = self.exclusive_data.lock().unwrap();
         data.user_id.clear();
+    }
+
+    // TODO: Improve error handling
+    fn config_path(ensure_created: bool) -> String {
+        let dir = dirs_next::config_dir().expect("Couldn't find config dir");
+        let dir = dir.to_str().expect("Couldn't find config dir");
+        let rc_config_dir = format!("{}/rc-slint", dir);
+
+        if ensure_created {
+            std::fs::create_dir_all(&rc_config_dir).expect("Couldn't create config dir");
+        }
+
+        rc_config_dir.to_string()
+    }
+
+    fn auto_token_path() -> String {
+        format!("{}/.auth_token", Self::config_path(true))
+    }
+
+    pub fn saved_auth_token() -> String {
+        let path = Self::auto_token_path();
+        if let Ok(token) = std::fs::read_to_string(path) {
+            token
+        } else {
+            "".to_string()
+        }
+    }
+
+    fn save_auth_token(&self, token: &str) -> Result<(), std::io::Error> {
+        {
+            let mut data = self.exclusive_data.lock().unwrap();
+            data.auth_token = token.to_string();
+        }
+
+        let path = Self::auto_token_path();
+        println!("Saving token to {:?}", path);
+        std::fs::write(path, token)
     }
 
     /// Sends a POST request
@@ -116,6 +153,7 @@ impl RocketChat {
     /// Logs in via a pre-existing token
     pub async fn login_via_token(&self) -> Result<bool, String> {
         self.clear_user_id();
+        // println!("login_via_token: auth_token = {:?}", self.get_auth_token());
         if self.get_auth_token().is_empty() {
             // No error. But we can't login without a token.
             return Ok(false);
@@ -126,7 +164,7 @@ impl RocketChat {
         map.insert("resume", auth_token.as_str());
         let json = self.post("api/v1/login", map).await?;
 
-        println!("login_via_token: {:?}", json);
+        // println!("login_via_token: {:?}", json);
         let success = json["status"].as_str().ok_or("status is missing")? == "success";
         if success {
             self.set_user_id(String::from(
@@ -146,6 +184,8 @@ impl RocketChat {
         if self.is_logged_in() {
             return Ok(());
         }
+
+        Self::save_auth_token(&self, "").unwrap();
 
         map.insert("user", user);
         map.insert("password", pwd);
@@ -172,6 +212,7 @@ impl RocketChat {
                     .ok_or("data or authToken is missing")?,
             ));
             println!("login success. authToken: {:?}", self.get_auth_token());
+            Self::save_auth_token(&self, self.get_auth_token().as_str()).unwrap();
             Ok(())
         } else {
             println!("login failed: {:?}", json);
