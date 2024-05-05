@@ -250,7 +250,7 @@ impl RocketChat {
         let res = self.get("/api/v1/channels.list.joined").await;
         match res {
             Ok(body) => {
-                serde_json::to_writer_pretty(std::io::stdout(), &body).unwrap();
+                // serde_json::to_writer_pretty(std::io::stdout(), &body).unwrap();
                 let channels = body["channels"].as_array().unwrap();
                 let mut joined_channels = Vec::new();
                 for c in channels {
