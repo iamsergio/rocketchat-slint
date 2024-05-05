@@ -19,6 +19,7 @@ struct ExclusiveData {
     joined_channels: Vec<Channel>,
 }
 
+#[derive(Clone)]
 pub struct Channel {
     pub id: String,
     pub name: String,
@@ -77,6 +78,11 @@ impl RocketChat {
     pub fn set_joined_channels(&self, channels: Vec<Channel>) {
         let mut data = self.exclusive_data.lock().unwrap();
         data.joined_channels = channels;
+    }
+
+    pub fn get_joined_channels(&self) -> Vec<Channel> {
+        let data = self.exclusive_data.lock().unwrap();
+        data.joined_channels.clone()
     }
 
     // TODO: Improve error handling
