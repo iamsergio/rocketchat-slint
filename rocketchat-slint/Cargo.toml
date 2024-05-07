@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-slint = "1.5"
+slint = { version = "1.5", features = ["backend-android-activity-05"] }
 tokio = { version = "1", features = ["full"] }
 rocketchat = { path = "../rocketchat" }
 
