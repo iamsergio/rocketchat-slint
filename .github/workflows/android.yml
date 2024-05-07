@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: MIT
+
+name: Android
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install rust dependencies
+        run: |
+          sudo apt-get update
+          rustup target add aarch64-linux-android
+          rustup target add x86_64-linux-android
+          cargo install cargo-apk
+
+      - name: Build
+        run: |
+          cd rocketchat-slint/
+          cargo apk build --target aarch64-linux-android --lib
+          cargo apk build --target x86_64-linux-android --lib
+        env:
+          RC_SLINT_TEST_USER: ${{ secrets.RC_SLINT_TEST_USER }}
+          RC_SLINT_TEST_PWD: ${{ secrets.RC_SLINT_TEST_PWD }}
+          RC_SLINT_TEST_URL: ${{ secrets.RC_SLINT_TEST_URL }}
