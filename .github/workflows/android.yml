@@ -31,7 +31,7 @@ jobs:
           cmdline-tools-version: 10406996
           packages: ""
 
-      - run: sdkmanager tools platform-tools "platforms;android-33" "build-tools;33.0.0"
+      - run: sdkmanager tools platform-tools "platforms;android-30" "build-tools;30.0.0"
 
       - name: Install rust dependencies
         run: |
