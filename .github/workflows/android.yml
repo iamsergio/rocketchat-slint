@@ -18,6 +18,18 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      # 10406996 == android 11
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 10406996
+
       - name: Install rust dependencies
         run: |
           sudo apt-get update
