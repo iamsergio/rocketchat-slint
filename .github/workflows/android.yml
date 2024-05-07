@@ -29,6 +29,9 @@ jobs:
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 10406996
+          packages: ""
+
+      - run: sdkmanager tools platform-tools "platforms;android-33" "build-tools;33.0.0"
 
       - name: Install rust dependencies
         run: |
