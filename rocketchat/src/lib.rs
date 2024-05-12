@@ -89,7 +89,11 @@ impl RocketChat {
     fn config_path(ensure_created: bool) -> String {
         let dir = dirs_next::config_dir().expect("Couldn't find config dir");
         let dir = dir.to_str().expect("Couldn't find config dir");
-        let rc_config_dir = format!("{}/rc-slint", dir);
+        let rc_config_dir = if cfg!(test) {
+            format!("{}/rc-slint/tests", dir)
+        } else {
+            format!("{}/rc-slint", dir)
+        };
 
         if ensure_created {
             std::fs::create_dir_all(&rc_config_dir).expect("Couldn't create config dir");
