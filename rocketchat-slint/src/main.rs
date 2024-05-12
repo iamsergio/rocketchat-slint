@@ -13,10 +13,10 @@ slint::include_modules!();
 async fn main() -> Result<(), slint::PlatformError> {
     let ui = AppWindow::new()?;
 
-    pub const RC_SLINT_TEST_URL: &str = env!("RC_SLINT_TEST_URL");
+    pub const RC_SLINT_URL: &str = env!("RC_SLINT_URL");
 
     let rc = Rc::new(rocketchat::RocketChat::new(
-        std::format!("https://{}", RC_SLINT_TEST_URL).as_str(),
+        std::format!("https://{}", RC_SLINT_URL).as_str(),
         rocketchat::RocketChat::saved_auth_token().as_str(),
     ));
 

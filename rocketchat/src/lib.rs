@@ -11,12 +11,32 @@ pub struct RocketChat {
     exclusive_data: Mutex<ExclusiveData>,
 }
 
+enum RoomType {
+    /// A direct conversation with someone
+    Direct,
+    Unknown,
+    Channel,
+}
+
+impl RoomType {
+    pub fn from_str(s: &str) -> RoomType {
+        match s {
+            "d" => RoomType::Direct,
+            "c" => RoomType::Channel,
+            "p" => RoomType::Channel, // Locked channel
+            _ => RoomType::Unknown,
+        }
+    }
+}
+
 /// Data that might be accessed by another thread
 #[derive(Default)]
 struct ExclusiveData {
     auth_token: String,
     user_id: String,
     joined_channels: Vec<Channel>,
+    pub direct_rooms: Vec<DirectRoom>,
+    pub channel_rooms: Vec<Channel>,
 }
 
 #[derive(Clone)]
@@ -27,12 +47,22 @@ pub struct Channel {
     pub last_message_timestamp: Option<i64>,
 }
 
+#[derive(Clone)]
+pub struct DirectRoom {
+    pub id: String,
+    pub num_msgs: u64,
+    pub usernames: Vec<String>,
+    pub last_message_timestamp: Option<i64>,
+}
+
 impl ExclusiveData {
     fn new(auth_token: String, user_id: String) -> Self {
         Self {
             auth_token,
             user_id,
             joined_channels: Vec::new(),
+            direct_rooms: Vec::new(),
+            channel_rooms: Vec::new(),
         }
     }
 }
@@ -80,9 +110,29 @@ impl RocketChat {
         data.joined_channels = channels;
     }
 
+    pub fn set_direct_rooms(&self, rooms: Vec<DirectRoom>) {
+        let mut data = self.exclusive_data.lock().unwrap();
+        data.direct_rooms = rooms;
+    }
+
+    pub fn set_channel_rooms(&self, rooms: Vec<Channel>) {
+        let mut data = self.exclusive_data.lock().unwrap();
+        data.channel_rooms = rooms;
+    }
+
     pub fn get_joined_channels(&self) -> Vec<Channel> {
         let data = self.exclusive_data.lock().unwrap();
         data.joined_channels.clone()
+    }
+
+    pub fn get_direct_rooms(&self) -> Vec<DirectRoom> {
+        let data = self.exclusive_data.lock().unwrap();
+        data.direct_rooms.clone()
+    }
+
+    pub fn get_channel_rooms(&self) -> Vec<Channel> {
+        let data = self.exclusive_data.lock().unwrap();
+        data.channel_rooms.clone()
     }
 
     // TODO: Improve error handling
@@ -268,6 +318,61 @@ impl RocketChat {
                     joined_channels.push(channel);
                 }
                 self.set_joined_channels(joined_channels);
+            }
+            Err(_) => todo!(),
+        }
+    }
+
+    pub async fn list_rooms(&self) {
+        if !self.is_logged_in() {
+            panic!("not logged in");
+        }
+        let res = self.get("/api/v1/rooms.get").await;
+        match res {
+            Ok(body) => {
+                // serde_json::to_writer_pretty(std::io::stdout(), &body).unwrap();
+                let success = body["success"].as_bool().unwrap_or(false);
+                if !success {
+                    println!("list_rooms: Failed to list rooms!");
+                    return;
+                }
+
+                let mut direct_rooms = Vec::new();
+                let mut channel_rooms = Vec::new();
+
+                let rooms = body["update"].as_array().unwrap();
+                for r in rooms {
+                    let room_type = RoomType::from_str(r["t"].as_str().unwrap_or(""));
+                    match room_type {
+                        RoomType::Direct => {
+                            direct_rooms.push(DirectRoom {
+                                id: String::from(r["_id"].as_str().unwrap()),
+                                num_msgs: r["msgs"].as_u64().unwrap_or(0),
+                                usernames: r["usernames"]
+                                    .as_array()
+                                    .unwrap()
+                                    .iter()
+                                    .map(|v| String::from(v.as_str().unwrap()))
+                                    .collect(),
+                                last_message_timestamp: Some(str_to_timestamp(r["lm"].as_str())),
+                            });
+                        }
+                        RoomType::Unknown => {
+                            println!("unknown room type! {} ", r);
+                        }
+                        RoomType::Channel => {
+                            channel_rooms.push(Channel {
+                                id: String::from(r["_id"].as_str().unwrap()),
+                                name: String::from(r["name"].as_str().unwrap()),
+                                num_msgs: r["msgs"].as_u64().unwrap_or(0),
+                                last_message_timestamp: Some(str_to_timestamp(r["lm"].as_str())),
+                            });
+                        }
+                    }
+                }
+
+                self.set_direct_rooms(direct_rooms);
+                self.set_channel_rooms(channel_rooms);
             }
             Err(_) => todo!(),
         }

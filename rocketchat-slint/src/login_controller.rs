@@ -14,8 +14,7 @@ pub struct Controller {
 
 impl Controller {
     pub fn new(ui: AppWindow, model: Rc<rocketchat::RocketChat>) -> Rc<Self> {
-        ui.set_usernameText(SharedString::from(env!("RC_SLINT_TEST_USER")));
-        ui.set_passwordText(SharedString::from(env!("RC_SLINT_TEST_PWD")));
+        ui.set_usernameText(SharedString::from(env!("RC_SLINT_USER")));
 
         let controller = Rc::new(Self {
             ui,

@@ -27,7 +27,9 @@ impl Controller {
     }
 
     pub async fn load_channel_list(&self) {
+        // TODO: run in parallel
         self.model.list_joined_channels().await;
+        self.model.list_rooms().await;
         let channels = self.model.get_joined_channels();
         let mut ui_channels: Vec<Channel> = Vec::new();
         for c in channels {
@@ -38,5 +40,15 @@ impl Controller {
         }
         let channel_model = Rc::new(slint::VecModel::from(ui_channels));
         self.ui.set_channelModel(channel_model.into());
+
+        let rooms = self.model.get_direct_rooms();
+        for r in rooms {
+            println!("direct room: {:?}", r.usernames);
+        }
+
+        let rooms = self.model.get_channel_rooms();
+        for r in rooms {
+            println!("channel room: {:?}", r.name);
+        }
     }
 }
