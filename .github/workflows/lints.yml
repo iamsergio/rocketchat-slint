@@ -26,6 +26,8 @@ jobs:
         run: |
           cargo clippy -- -Dwarnings
         env:
+          RC_SLINT_USER: ${{ secrets.RC_SLINT_TEST_USER }}
           RC_SLINT_TEST_USER: ${{ secrets.RC_SLINT_TEST_USER }}
           RC_SLINT_TEST_PWD: ${{ secrets.RC_SLINT_TEST_PWD }}
           RC_SLINT_TEST_URL: ${{ secrets.RC_SLINT_TEST_URL }}
+          RC_SLINT_URL: ${{ secrets.RC_SLINT_TEST_URL }}
