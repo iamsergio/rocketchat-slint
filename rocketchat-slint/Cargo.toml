@@ -7,10 +7,11 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-slint = { version = "1.5", features = ["backend-android-activity-05"] }
+slint = { version = "1.6", features = ["backend-android-activity-06"] }
 tokio = { version = "1", features = ["full"] }
 rocketchat = { path = "../rocketchat" }
 openssl = { version = "*", features = ["vendored"] }
+log = "0.4.21"
 
 [build-dependencies]
-slint-build = "1.5"
+slint-build = "1.6"
